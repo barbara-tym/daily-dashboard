@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/icons/icon_1.png">
+
+    <meta
+        name="description"
+        content="Mój codzienny dashboard — posiłki, czas dla siebie, sprzątanie, praca i nagrody."
+    >
+
+    <title>Mój dzień</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <main class="dashboard">
+
+        <!-- =========================
+             HEADER / AKTUALNA DATA
+        ========================== -->
+
+        <header class="dashboard-header">
+
+            <p class="dashboard-header__date" id="current-date">
+                Niedziela, 4 października 2026
+            </p>
+
+            <p class="dashboard-header__time" id="current-time">
+                13:00:00
+            </p>
+
+        </header>
+
+
+        <!-- =========================
+             POSIŁKI
+        ========================== -->
+
+        <section class="section meals" id="meals">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">DZISIAJ</p>
+                    <h1 class="section-title">
+                        Moje posiłki
+                    </h1>
+                </div>
+
+                <div
+                    class="mood"
+                    id="meal-mood"
+                    aria-live="polite"
+                    aria-label="Twój nastrój zależny od liczby zjedzonych posiłków"
+                >
+                    😭
+                </div>
+
+            </div>
+
+
+            <div class="meals-list">
+
+                <label class="meal">
+                    <input
+                        type="checkbox"
+                        name="meal"
+                        value="breakfast"
+                        data-meal="breakfast"
+                    >
+
+                    <span class="meal__checkbox"></span>
+
+                    <span class="meal__name">
+                        Śniadanie
+                    </span>
+                </label>
+
+
+                <label class="meal">
+                    <input
+                        type="checkbox"
+                        name="meal"
+                        value="second-breakfast"
+                        data-meal="second-breakfast"
+                    >
+
+                    <span class="meal__checkbox"></span>
+
+                    <span class="meal__name">
+                        II śniadanie
+                    </span>
+                </label>
+
+
+                <label class="meal">
+                    <input
+                        type="checkbox"
+                        name="meal"
+                        value="lunch"
+                        data-meal="lunch"
+                    >
+
+                    <span class="meal__checkbox"></span>
+
+                    <span class="meal__name">
+                        Obiad
+                    </span>
+                </label>
+
+
+                <label class="meal">
+                    <input
+                        type="checkbox"
+                        name="meal"
+                        value="snack"
+                        data-meal="snack"
+                    >
+
+                    <span class="meal__checkbox"></span>
+
+                    <span class="meal__name">
+                        Podwieczorek
+                    </span>
+                </label>
+
+
+                <label class="meal">
+                    <input
+                        type="checkbox"
+                        name="meal"
+                        value="dinner"
+                        data-meal="dinner"
+                    >
+
+                    <span class="meal__checkbox"></span>
+
+                    <span class="meal__name">
+                        Kolacja
+                    </span>
+                </label>
+
+            </div>
+
+
+            <p class="meals-progress" id="meals-progress">
+                0 / 5 posiłków
+            </p>
+
+        </section>
+
+
+        <!-- =========================
+             TIMERY
+        ========================== -->
+
+        <section class="section timers" id="timers">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">CZAS DLA MNIE</p>
+
+                    <h2 class="section-title">
+                        Moje aktywności
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="timers-grid">
+
+
+                <!-- =====================
+                     DBANIE O SIEBIE
+                ====================== -->
+
+                <article
+                    class="timer-card timer-card--self-care"
+                    data-timer="self-care"
+                >
+
+                    <div class="timer-card__header">
+
+                        <div>
+                            <p class="timer-card__label">
+                                Dbanie o siebie
+                            </p>
+
+                            <h3 class="timer-card__title">
+                                Czas dla mnie
+                            </h3>
+                        </div>
+
+                        <span
+                            class="timer-card__status"
+                            data-status="self-care"
+                        >
+                            Gotowy
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="timer-card__display"
+                        id="self-care-display"
+                        aria-live="polite"
+                    >
+                    01:00:00
+                    </div>
+
+
+                    <p class="timer-card__description">
+                        Mam dziś godzinę tylko dla siebie.
+                    </p>
+
+
+                    <div class="timer-card__actions">
+
+                        <button
+                            type="button"
+                            class="button button--primary"
+                            data-action="start"
+                            data-timer="self-care"
+                        >
+                            Start
+                        </button>
+
+                        <button
+                            type="button"
+                            class="button button--secondary"
+                            data-action="stop"
+                            data-timer="self-care"
+                        >
+                            Stop
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <!-- =====================
+                     SPRZĄTANIE
+                ====================== -->
+
+                <article
+                    class="timer-card timer-card--cleaning"
+                    data-timer="cleaning"
+                >
+
+                    <div class="timer-card__header">
+
+                        <div>
+                            <p class="timer-card__label">
+                                Dom
+                            </p>
+
+                            <h3 class="timer-card__title">
+                                Sprzątanie
+                            </h3>
+                        </div>
+
+                        <span
+                            class="timer-card__status"
+                            data-status="cleaning"
+                        >
+                            Gotowy
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="timer-card__display"
+                        id="cleaning-display"
+                        aria-live="polite"
+                    >
+                        01:00:00
+                    </div>
+
+
+                    <p class="timer-card__description">
+                        Godzina na ogarnięcie przestrzeni wokół mnie.
+                    </p>
+
+
+                    <div class="timer-card__actions">
+
+                        <button
+                            type="button"
+                            class="button button--primary"
+                            data-action="start"
+                            data-timer="cleaning"
+                        >
+                            Start
+                        </button>
+
+                        <button
+                            type="button"
+                            class="button button--secondary"
+                            data-action="stop"
+                            data-timer="cleaning"
+                        >
+                            Stop
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <!-- =====================
+                     PRACA
+                ====================== -->
+
+                <article
+                    class="timer-card timer-card--work"
+                    data-timer="work"
+                >
+
+                    <div class="timer-card__header">
+
+                        <div>
+                            <p class="timer-card__label">
+                                Skupienie
+                            </p>
+
+                            <h3 class="timer-card__title">
+                                Praca
+                            </h3>
+                        </div>
+
+                        <span
+                            class="timer-card__status"
+                            data-status="work"
+                        >
+                            Gotowy
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="timer-card__display"
+                        id="work-display"
+                        aria-live="polite"
+                    >
+                        00:00:00
+                    </div>
+
+
+                    <p class="timer-card__description">
+                        Każda minuta przybliża mnie do nagrody.
+                    </p>
+
+
+                    <div class="timer-card__actions">
+
+                        <button
+                            type="button"
+                            class="button button--primary"
+                            data-action="start"
+                            data-timer="work"
+                        >
+                            Start
+                        </button>
+
+                        <button
+                            type="button"
+                            class="button button--secondary"
+                            data-action="stop"
+                            data-timer="work"
+                        >
+                            Stop
+                        </button>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             NAGRODY
+        ========================== -->
+
+        <section class="section rewards" id="rewards">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">MÓJ CEL</p>
+
+                    <h2 class="section-title">
+                        Nagroda
+                    </h2>
+                </div>
+
+                <div class="rewards-count">
+
+                    <span
+                        class="rewards-count__number"
+                        id="rewards-count"
+                    >
+                        0
+                    </span>
+
+                    <span class="rewards-count__label">
+                        zdobytych nagród
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="reward-progress">
+
+                <div class="reward-progress__top">
+
+                    <span>
+                        Postęp
+                    </span>
+
+                    <span id="work-total">
+                        0 h / 20 h
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="progress-bar"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="20"
+                    aria-valuenow="0"
+                    aria-label="Postęp do kolejnej nagrody"
+                >
+
+                    <div
+                        class="progress-bar__fill"
+                        id="reward-progress-fill"
+                    ></div>
+
+                </div>
+
+
+                <p
+                    class="reward-progress__message"
+                    id="reward-progress-message"
+                >
+                    Jeszcze 20 godzin do kolejnej nagrody.
+                </p>
+
+            </div>
+
+
+            <div
+                class="reward-complete"
+                id="reward-complete"
+                hidden
+            >
+
+                <span class="reward-complete__icon">
+                    ✦
+                </span>
+
+                <p class="reward-complete__title">
+                    Zasłużona nagroda
+                </p>
+
+                <p class="reward-complete__text">
+                    Uzbierałaś 20 godzin pracy.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             MYŚL DNIA
+        ========================== -->
+
+        <section class="section thought" id="thought">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">DZIENNIK</p>
+
+                    <h2 class="section-title">
+                        Myśl dnia
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <form class="thought-form" id="thought-form">
+
+                <label
+                    class="visually-hidden"
+                    for="thought-input"
+                >
+                    Twoja myśl na dziś
+                </label>
+
+                <textarea
+                    id="thought-input"
+                    name="thought"
+                    rows="5"
+                    maxlength="1000"
+                    placeholder="Jak minął Ci dziś dzień?"
+                ></textarea>
+
+
+                <div class="thought-form__footer">
+
+                    <span
+                        class="thought-form__status"
+                        id="thought-status"
+                    >
+                        Myśl zostanie zapisana dla dzisiejszego dnia.
+                    </span>
+
+                    <button
+                        type="submit"
+                        class="button button--primary"
+                    >
+                        Zapisz myśl
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- =========================
+             HISTORIA MYŚLI
+        ========================== -->
+
+        <section
+            class="section thought-history"
+            id="thought-history"
+        >
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">
+                        HISTORIA
+                    </p>
+
+                    <h2 class="section-title">
+                        Moje myśli
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div
+                class="thought-history__list"
+                id="thought-history-list"
+            >
+
+                <!--
+                    Wpisy zostaną tutaj dodane
+                    przez JavaScript.
+                -->
+
+                <p class="empty-state" id="thought-history-empty">
+                    Twoje zapisane myśli pojawią się tutaj.
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
+
+    <script src="js/storage.js"></script>
+    <script src="js/timers.js"></script>
+    <script src="js/meals.js"></script>
+    <script src="js/rewards.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
