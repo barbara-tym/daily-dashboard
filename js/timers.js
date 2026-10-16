@@ -1,736 +1,180 @@
-/*
- * ========================================
- * TIMERS
- * ========================================
- *
- * self-care  = odliczanie od 1 godziny
- * cleaning   = odliczanie od 1 godziny
- * work       = liczenie od 0 w górę
- *
- * Tylko jeden timer może działać naraz.
- */
+const TIMER_NAMES = ["self-care", "cleaning", "prayer", "break"];
+const soundedBreaks = new Set();
+let audioContext = null;
 
-
-/* ========================================
-   KONFIGURACJA
-======================================== */
-
-const TIMER_NAMES = [
-    "self-care",
-    "cleaning",
-    "work"
-];
-
-const DAILY_TIMER_GOAL = 60 * 60;
-
-
-/* ========================================
-   ELEMENTY DOM
-======================================== */
-
-const timerElements = {};
-
-
-function initializeTimerElements() {
-
-    TIMER_NAMES.forEach(function(timerName) {
-
-        timerElements[timerName] = {
-
-            display: document.querySelector(
-                "#" + timerName + "-display"
-            ),
-
-            status: document.querySelector(
-                '[data-status="' + timerName + '"]'
-            ),
-
-            startButton: document.querySelector(
-                '[data-action="start"][data-timer="' + timerName + '"]'
-            ),
-
-            stopButton: document.querySelector(
-                '[data-action="stop"][data-timer="' + timerName + '"]'
-            )
-
-        };
-
-    });
-
+function playBreakMelody() {
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioContext = audioContext || new AudioContextClass();
+        if (audioContext.state === "suspended") audioContext.resume();
+        const now = audioContext.currentTime;
+        [659.25, 783.99, 987.77, 783.99].forEach((frequency, index) => {
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.type = "sine";
+            oscillator.frequency.value = frequency;
+            gain.gain.setValueAtTime(0.0001, now + index * 0.22);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.22 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.22 + 0.19);
+            oscillator.connect(gain); gain.connect(audioContext.destination);
+            oscillator.start(now + index * 0.22); oscillator.stop(now + index * 0.22 + 0.2);
+        });
+    } catch (error) { console.warn("Dźwięk przerwy nie jest dostępny:", error); }
 }
-
-
-/* ========================================
-   FORMATOWANIE CZASU
-======================================== */
+let timerInterval = null;
 
 function formatTime(totalSeconds) {
-
-    totalSeconds = Math.max(
-        0,
-        Math.floor(Number(totalSeconds) || 0)
-    );
-
-
-    const hours =
-        Math.floor(totalSeconds / 3600);
-
-
-    const minutes =
-        Math.floor((totalSeconds % 3600) / 60);
-
-
-    const seconds =
-        totalSeconds % 60;
-
-
-    return [
-        hours,
-        minutes,
-        seconds
-    ]
-        .map(function(value) {
-            return String(value).padStart(2, "0");
-        })
-        .join(":");
-
+    const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainder = seconds % 60;
+    return [hours, minutes, remainder].map(value => String(value).padStart(2, "0")).join(":");
 }
-
-
-/* ========================================
-   AKTUALNY CZAS TIMERA
-======================================== */
 
 function getCurrentElapsed(timerName) {
-
-    const timer =
-        getTimerData(timerName);
-
-
-    if (!timer) {
-        return 0;
+    const timer = getAppData().currentDay.timers[timerName];
+    if (!timer) return 0;
+    let elapsed = Math.max(0, Number(timer.elapsed) || 0);
+    if (timer.running && timer.startedAt) {
+        elapsed += Math.max(0, Math.floor((Date.now() - Number(timer.startedAt)) / 1000));
     }
-
-
-    let elapsed =
-        Number(timer.elapsed) || 0;
-
-
-    if (
-        timer.running &&
-        timer.startedAt
-    ) {
-
-        const startedAt =
-            Number(timer.startedAt);
-
-
-        const currentSession =
-            Math.max(
-                0,
-                Math.floor(
-                    (Date.now() - startedAt) / 1000
-                )
-            );
-
-
-        elapsed += currentSession;
-
-    }
-
-
-    return elapsed;
-
+    return Math.min(elapsed, timer.limitSeconds);
 }
 
-
-/* ========================================
-   CZAS WYŚWIETLANY
-======================================== */
-
-function getDisplayTime(timerName) {
-
-    const elapsed =
-        getCurrentElapsed(timerName);
-
-
-    /*
-     * Dbanie o siebie i sprzątanie:
-     *
-     * 01:00:00
-     * 00:59:59
-     * 00:59:58
-     * ...
-     * 00:00:00
-     */
-
-    if (
-        timerName === "self-care" ||
-        timerName === "cleaning"
-    ) {
-
-        return Math.max(
-            0,
-            DAILY_TIMER_GOAL - elapsed
-        );
-
-    }
-
-
-    /*
-     * Praca:
-     *
-     * 00:00:00
-     * 00:00:01
-     * 00:00:02
-     * ...
-     */
-
-    return elapsed;
-
+function getRemaining(timerName) {
+    const timer = getAppData().currentDay.timers[timerName];
+    return Math.max(0, timer.limitSeconds - getCurrentElapsed(timerName));
 }
-
-
-/* ========================================
-   START TIMERA
-======================================== */
 
 function startTimer(timerName) {
-
-    const timer =
-        getTimerData(timerName);
-
-
-    if (!timer) {
-        return;
-    }
-
-
-    /*
-     * Jeśli już działa, nic nie robimy.
-     */
-
-    if (timer.running) {
-        return;
-    }
-
-
-    /*
-     * Dbanie o siebie i sprzątanie
-     * nie mogą zostać uruchomione
-     * po wykorzystaniu całej godziny.
-     */
-
-    if (
-        timerName !== "work" &&
-        getCurrentElapsed(timerName) >= DAILY_TIMER_GOAL
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-     * Zatrzymujemy każdy inny timer.
-     */
-
-    TIMER_NAMES.forEach(function(name) {
-
-        if (name !== timerName) {
-
-            const otherTimer =
-                getTimerData(name);
-
-
-            if (
-                otherTimer &&
-                otherTimer.running
-            ) {
-
-                stopTimer(name);
-
-            }
-
-        }
-
-    });
-
-
-    /*
-     * Uruchamiamy wybrany timer.
-     */
-
-    updateTimerData(
-        timerName,
-        function(timerData) {
-
-            timerData.running = true;
-            timerData.startedAt = Date.now();
-
-        }
-    );
-
-
+    const data = getAppData();
+    const timer = data.currentDay.timers[timerName];
+    if (!timer || timer.running || getRemaining(timerName) <= 0) return;
+    stopAnyActiveTimer();
+    if (timerName === "break") { try { const C = window.AudioContext || window.webkitAudioContext; if (C) { audioContext = audioContext || new C(); if (audioContext.state === "suspended") audioContext.resume(); } } catch (_) {} }
+    timer.running = true;
+    timer.startedAt = Date.now();
+    data.activeTimer = { type: "activity", key: timerName };
+    persistAppData();
     renderTimers();
-
+    renderProjects();
 }
 
-
-/* ========================================
-   STOP TIMERA
-======================================== */
-
-function stopTimer(timerName) {
-
-    const timer =
-        getTimerData(timerName);
-
-
-    if (
-        !timer ||
-        !timer.running
-    ) {
-
-        return;
-
-    }
-
-
-    const startedAt =
-        Number(timer.startedAt);
-
-
-    let sessionSeconds =
-        Math.max(
-            0,
-            Math.floor(
-                (Date.now() - startedAt) / 1000
-            )
-        );
-
-
-    /*
-     * Dla timerów godzinnych nie możemy
-     * wykorzystać więcej niż 3600 sekund.
-     */
-
-    if (timerName !== "work") {
-
-        const alreadyElapsed =
-            Number(timer.elapsed) || 0;
-
-
-        const remaining =
-            Math.max(
-                0,
-                DAILY_TIMER_GOAL - alreadyElapsed
-            );
-
-
-        sessionSeconds =
-            Math.min(
-                sessionSeconds,
-                remaining
-            );
-
-    }
-
-
-    /*
-     * Zapisujemy timer.
-     */
-
-    updateTimerData(
-        timerName,
-        function(timerData) {
-
-            timerData.elapsed =
-                (Number(timerData.elapsed) || 0)
-                + sessionSeconds;
-
-            timerData.running = false;
-            timerData.startedAt = null;
-
-        }
+function stopTimer(timerName, reason = "manual") {
+    const data = getAppData();
+    const timer = data.currentDay.timers[timerName];
+    if (!timer || !timer.running) return;
+    const now = Date.now();
+    const start = Number(timer.startedAt) || now;
+    const seconds = Math.min(
+        Math.max(0, Math.floor((now - start) / 1000)),
+        Math.max(0, timer.limitSeconds - (Number(timer.elapsed) || 0))
     );
-
-
-    /*
-     * Czas pracy trafia również
-     * do puli nagrody.
-     */
-
-    if (
-        timerName === "work" &&
-        sessionSeconds > 0
-    ) {
-
-        addWorkToRewards(sessionSeconds);
-
-    }
-
-
-    renderTimers();
-
-
-    if (
-        typeof renderRewards === "function"
-    ) {
-
-        renderRewards();
-
-    }
-
-}
-
-
-/* ========================================
-   CZAS PRACY DO NAGRODY
-======================================== */
-
-function addWorkToRewards(seconds) {
-
-    updateRewards(function(rewards) {
-
-        rewards.workSeconds =
-            (Number(rewards.workSeconds) || 0)
-            + seconds;
-
+    timer.elapsed = Math.min(timer.limitSeconds, (Number(timer.elapsed) || 0) + seconds);
+    timer.running = false;
+    timer.startedAt = null;
+    data.activityHistory.push({
+        id: createSessionId(),
+        type: "activity",
+        category: timerName,
+        date: data.currentDay.date,
+        startedAt: Math.max(start, now - seconds * 1000),
+        endedAt: now,
+        durationSeconds: seconds,
+        reason
     });
-
+    data.activeTimer = null;
+    persistAppData();
+    renderTimers();
+    renderCalendar();
+    renderPomodoroCount();
 }
 
-
-/* ========================================
-   STATUS
-======================================== */
-
-function getTimerStatus(
-    timerName,
-    elapsed,
-    running
-) {
-
-    if (running) {
-        return "W trakcie";
-    }
-
-
-    if (
-        timerName !== "work" &&
-        elapsed >= DAILY_TIMER_GOAL
-    ) {
-
-        return "Cel osiągnięty";
-
-    }
-
-
-    if (elapsed === 0) {
-        return "Gotowy";
-    }
-
-
-    return "Wstrzymany";
-
+function stopAnyActiveTimer() {
+    const active = getAppData().activeTimer;
+    if (!active) return;
+    if (active.type === "activity") stopTimer(active.key, "switched");
+    else if (active.type === "project") stopProject(active.key, "switched");
 }
-
-
-/* ========================================
-   RENDEROWANIE POJEDYNCZEGO TIMERA
-======================================== */
-
-function renderTimer(timerName) {
-
-    const timer =
-        getTimerData(timerName);
-
-
-    const elements =
-        timerElements[timerName];
-
-
-    if (
-        !timer ||
-        !elements
-    ) {
-
-        return;
-
-    }
-
-
-    const elapsed =
-        getCurrentElapsed(timerName);
-
-
-    const displayTime =
-        getDisplayTime(timerName);
-
-
-    /*
-     * Wyświetlanie czasu.
-     */
-
-    if (elements.display) {
-
-        elements.display.textContent =
-            formatTime(displayTime);
-
-    }
-
-
-    /*
-     * Status.
-     */
-
-    if (elements.status) {
-
-        elements.status.textContent =
-            getTimerStatus(
-                timerName,
-                elapsed,
-                timer.running
-            );
-
-    }
-
-
-    /*
-     * Przycisk START.
-     */
-
-    if (elements.startButton) {
-
-        const goalReached =
-            timerName !== "work" &&
-            elapsed >= DAILY_TIMER_GOAL;
-
-
-        elements.startButton.disabled =
-            timer.running ||
-            goalReached;
-
-    }
-
-
-    /*
-     * Przycisk STOP.
-     */
-
-    if (elements.stopButton) {
-
-        elements.stopButton.disabled =
-            !timer.running;
-
-    }
-
-}
-
-
-/* ========================================
-   RENDEROWANIE WSZYSTKICH TIMERÓW
-======================================== */
 
 function renderTimers() {
-
-    TIMER_NAMES.forEach(function(timerName) {
-
-        renderTimer(timerName);
-
-    });
-
-}
-
-
-/* ========================================
-   AKTYWNY TIMER
-======================================== */
-
-function getActiveTimer() {
-
-    for (
-        let i = 0;
-        i < TIMER_NAMES.length;
-        i++
-    ) {
-
-        const timer =
-            getTimerData(TIMER_NAMES[i]);
-
-
-        if (
-            timer &&
-            timer.running
-        ) {
-
-            return TIMER_NAMES[i];
-
+    TIMER_NAMES.forEach(name => {
+        const timer = getAppData().currentDay.timers[name];
+        const display = document.querySelector(`#${name}-display`);
+        const status = document.querySelector(`[data-status="${name}"]`);
+        const startButton = document.querySelector(`[data-action="start"][data-timer="${name}"]`);
+        const stopButton = document.querySelector(`[data-action="stop"][data-timer="${name}"]`);
+        if (!timer) return;
+        if (display) display.textContent = formatTime(getRemaining(name));
+        if (status) {
+            status.textContent = timer.running ? "W trakcie" :
+                getRemaining(name) === 0 ? "Cel osiągnięty" :
+                timer.elapsed > 0 ? "Wstrzymany" : "Gotowy";
         }
-
-    }
-
-
-    return null;
-
+        if (startButton) startButton.disabled = Boolean(getAppData().activeTimer) && !timer.running || getRemaining(name) === 0;
+        if (stopButton) stopButton.disabled = !timer.running;
+        const card = document.querySelector(`[data-timer-card="${name}"]`);
+        if (card) card.classList.toggle("is-running", timer.running);
+    });
 }
 
+function renderPomodoroCount() {
+    const count = getAppData().activityHistory.filter(session => session.type === "activity" && session.category === "break" && session.date === getTodayKey()).length;
+    const element = document.querySelector("#pomodoro-count");
+    if (element) element.textContent = String(count);
+}
 
-/* ========================================
-   TYLKO JEDEN AKTYWNY TIMER
-======================================== */
+function createSessionId() {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
-function ensureSingleActiveTimer() {
-
-    const activeTimers =
-        TIMER_NAMES.filter(function(timerName) {
-
-            const timer =
-                getTimerData(timerName);
-
-
-            return (
-                timer &&
-                timer.running
-            );
-
-        });
-
-
-    if (activeTimers.length <= 1) {
+function tickTimers() {
+    const data = getAppData();
+    if (data.currentDay.date !== getTodayKey()) {
+        const active = data.activeTimer;
+        if (active?.type === "activity") stopTimer(active.key, "day-ended");
+        else if (active?.type === "project") stopProject(active.key, "day-ended");
+        data.currentDay = createEmptyDay();
+        data.activeTimer = null;
+        persistAppData();
+        renderMeals();
+        renderTimers();
+        renderProjects();
+        renderCalendar();
         return;
     }
 
-
-    /*
-     * Zostawiamy timer uruchomiony
-     * najpóźniej.
-     */
-
-    let latestTimer =
-        activeTimers[0];
-
-
-    let latestStartedAt =
-        Number(
-            getTimerData(latestTimer).startedAt
-        ) || 0;
-
-
-    activeTimers.forEach(function(timerName) {
-
-        const timer =
-            getTimerData(timerName);
-
-
-        const startedAt =
-            Number(timer.startedAt) || 0;
-
-
-        if (startedAt > latestStartedAt) {
-
-            latestStartedAt =
-                startedAt;
-
-            latestTimer =
-                timerName;
-
+    TIMER_NAMES.forEach(name => {
+        const timer = data.currentDay.timers[name];
+        const remaining = getRemaining(name);
+        if (name === "break" && timer?.running && remaining <= 60 && remaining > 0 && !soundedBreaks.has(data.currentDay.date)) {
+            soundedBreaks.add(data.currentDay.date);
+            playBreakMelody();
         }
-
-    });
-
-
-    activeTimers.forEach(function(timerName) {
-
-        if (timerName !== latestTimer) {
-
-            stopTimer(timerName);
-
+        if (timer?.running && remaining <= 0) {
+            stopTimer(name, "goal-reached");
         }
-
     });
-
+    renderTimers();
+    renderProjects();
 }
-
-
-/* ========================================
-   PRZYCISKI
-======================================== */
-
-function initializeTimerButtons() {
-
-    document
-        .querySelectorAll(
-            '[data-action="start"]'
-        )
-        .forEach(function(button) {
-
-            button.addEventListener(
-                "click",
-                function() {
-
-                    startTimer(
-                        button.dataset.timer
-                    );
-
-                }
-            );
-
-        });
-
-
-    document
-        .querySelectorAll(
-            '[data-action="stop"]'
-        )
-        .forEach(function(button) {
-
-            button.addEventListener(
-                "click",
-                function() {
-
-                    stopTimer(
-                        button.dataset.timer
-                    );
-
-                }
-            );
-
-        });
-
-}
-
-
-/* ========================================
-   ODŚWIEŻANIE CO SEKUNDĘ
-======================================== */
-
-function startTimerRendering() {
-
-    setInterval(function() {
-
-        renderTimers();
-
-    }, 1000);
-
-}
-
-
-/* ========================================
-   INICJALIZACJA
-======================================== */
 
 function initializeTimers() {
+    document.querySelectorAll('[data-action="start"]').forEach(button => {
+        button.addEventListener("click", () => startTimer(button.dataset.timer));
+    });
+    document.querySelectorAll('[data-action="stop"]').forEach(button => {
+        button.addEventListener("click", () => stopTimer(button.dataset.timer));
+    });
 
-    initializeTimerElements();
-
-    ensureSingleActiveTimer();
-
-    initializeTimerButtons();
+    // Nie wznawiamy timera po odświeżeniu strony — kończymy poprzednią sesję,
+    // żeby nie naliczać czasu, kiedy aplikacja mogła być nieużywana.
+    const data = getAppData();
+    if (data.activeTimer?.type === "activity") stopTimer(data.activeTimer.key, "page-reload");
+    if (data.activeTimer?.type === "project") stopProject(data.activeTimer.key, "page-reload");
 
     renderTimers();
-
-    startTimerRendering();
-
+    renderPomodoroCount();
+    timerInterval = window.setInterval(tickTimers, 1000);
 }

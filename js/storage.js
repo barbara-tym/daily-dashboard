@@ -1,41 +1,42 @@
 /*
- * ========================================
- * STORAGE
- * ========================================
- *
- * Ten moduł odpowiada za przechowywanie
- * danych aplikacji w localStorage.
- *
- * Dane są rozdzielone na:
- *
- * 1. dane bieżącego dnia
- * 2. dane długoterminowe
- *
- * Dane bieżącego dnia są resetowane,
- * kiedy rozpoczyna się nowy dzień.
- *
- * Liczba zdobytych nagród oraz historia
- * myśli pozostają zachowane.
+ * Dane aplikacji. Nowy klucz oznacza czysty start wersji 2,
+ * bez odczytywania starego formatu i bez kasowania starego wpisu.
  */
+const STORAGE_KEY = "daily-dashboard-v2";
+const ACTIVITY_LIMITS = {
+    "self-care": 60 * 60,
+    cleaning: 60 * 60,
+    prayer: 30 * 60,
+    break: 5 * 60
+};
+const ACTIVITY_LABELS = {
+    "self-care": "Czas dla mnie",
+    cleaning: "Sprzątanie",
+    prayer: "Modlitwa",
+    break: "Przerwa"
+};
+const PROJECTS = {
+    programming: "Programowanie",
+    business: "Biznes",
+    studies: "Studia / praca",
+    writing: "Pisanie",
+    technology: "Technologiczne"
+};
 
+function getTodayKey(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 
-/* ========================================
-   STORAGE KEY
-======================================== */
-
-const STORAGE_KEY = "daily-dashboard";
-
-
-/* ========================================
-   DOMYŚLNE DANE DNIA
-======================================== */
+function createTimerState(limitSeconds = null) {
+    return { elapsed: 0, running: false, startedAt: null, limitSeconds };
+}
 
 function createEmptyDay() {
-
     return {
-
         date: getTodayKey(),
-
         meals: {
             breakfast: false,
             "second-breakfast": false,
@@ -43,528 +44,107 @@ function createEmptyDay() {
             snack: false,
             dinner: false
         },
-
         timers: {
-
-            "self-care": {
-                elapsed: 0,
-                running: false,
-                startedAt: null
-            },
-
-            cleaning: {
-                elapsed: 0,
-                running: false,
-                startedAt: null
-            },
-
-            work: {
-                elapsed: 0,
-                running: false,
-                startedAt: null
-            }
-
-        },
-
-        thought: ""
-
+            "self-care": createTimerState(ACTIVITY_LIMITS["self-care"]),
+            cleaning: createTimerState(ACTIVITY_LIMITS.cleaning),
+            prayer: createTimerState(ACTIVITY_LIMITS.prayer),
+            break: createTimerState(ACTIVITY_LIMITS.break)
+        }
     };
-
 }
-
-
-/* ========================================
-   DOMYŚLNE DANE APLIKACJI
-======================================== */
 
 function createDefaultStorage() {
-
+    const projects = {};
+    Object.keys(PROJECTS).forEach(key => {
+        projects[key] = { totalSeconds: 0, running: false, startedAt: null };
+    });
     return {
-
         currentDay: createEmptyDay(),
-
-        rewards: {
-            count: 0,
-            workSeconds: 0
-        },
-
-        thoughtHistory: []
-
+        activityHistory: [],
+        projects,
+        activeTimer: null
     };
-
 }
-
-
-/* ========================================
-   DATA
-======================================== */
-
-/*
- * Zwraca datę w formacie:
- *
- * YYYY-MM-DD
- *
- * np.
- *
- * 2026-10-04
- *
- * Dzięki temu możemy jednoznacznie
- * rozpoznać, czy dane należą do dzisiejszego
- * dnia.
- */
-
-function getTodayKey() {
-
-    const now = new Date();
-
-    const year = now.getFullYear();
-
-    const month = String(
-        now.getMonth() + 1
-    ).padStart(2, "0");
-
-    const day = String(
-        now.getDate()
-    ).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-
-}
-
-
-/* ========================================
-   ODCZYT DANYCH
-======================================== */
 
 function loadStorage() {
-
-    const savedData =
-        localStorage.getItem(STORAGE_KEY);
-
-
-    /*
-     * Jeśli aplikacja jest uruchamiana
-     * pierwszy raz, tworzymy dane od zera.
-     */
-
-    if (!savedData) {
-
-        const initialData =
-            createDefaultStorage();
-
-        saveStorage(initialData);
-
-        return initialData;
-
-    }
-
-
     try {
-
-        const parsedData =
-            JSON.parse(savedData);
-
-
-        /*
-         * Sprawdzamy, czy dane mają
-         * oczekiwaną strukturę.
-         */
-
-        if (
-            !parsedData.currentDay ||
-            !parsedData.rewards ||
-            !Array.isArray(parsedData.thoughtHistory)
-        ) {
-
-            const repairedData =
-                createDefaultStorage();
-
-            saveStorage(repairedData);
-
-            return repairedData;
-
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+            const initial = createDefaultStorage();
+            saveStorage(initial);
+            return initial;
         }
 
-
-        /*
-         * Sprawdzamy, czy zapisany dzień
-         * jest nadal dzisiejszym dniem.
-         */
-
-        if (
-            parsedData.currentDay.date !==
-            getTodayKey()
-        ) {
-
-            return createNewDay(parsedData);
-
+        const data = JSON.parse(saved);
+        if (!data || !data.currentDay || !data.currentDay.meals ||
+            !data.currentDay.timers || !Array.isArray(data.activityHistory) ||
+            !data.projects) {
+            const fresh = createDefaultStorage();
+            saveStorage(fresh);
+            return fresh;
         }
 
+        // Bezpieczne uzupełnienie pól, jeśli zapis został częściowo uszkodzony.
+        const defaults = createDefaultStorage();
+        data.currentDay.meals = { ...defaults.currentDay.meals, ...data.currentDay.meals };
+        data.currentDay.timers = { ...defaults.currentDay.timers, ...data.currentDay.timers };
+        data.projects = { ...defaults.projects, ...data.projects };
+        Object.keys(PROJECTS).forEach(key => {
+            data.projects[key] = { ...defaults.projects[key], ...data.projects[key] };
+        });
 
-        return parsedData;
-
+        if (data.currentDay.date !== getTodayKey()) {
+            // Nie przenosimy dziennych limitów na kolejny dzień.
+            data.currentDay = createEmptyDay();
+            data.activeTimer = null;
+            Object.keys(data.projects).forEach(key => {
+                data.projects[key].running = false;
+                data.projects[key].startedAt = null;
+            });
+        }
+        saveStorage(data);
+        return data;
     } catch (error) {
-
-        /*
-         * Jeśli dane w localStorage są
-         * uszkodzone, nie pozwalamy,
-         * żeby aplikacja przestała działać.
-         */
-
-        console.error(
-            "Nie udało się odczytać danych:",
-            error
-        );
-
-
-        const repairedData =
-            createDefaultStorage();
-
-        saveStorage(repairedData);
-
-        return repairedData;
-
+        console.error("Nie udało się odczytać danych dashboardu:", error);
+        const fresh = createDefaultStorage();
+        saveStorage(fresh);
+        return fresh;
     }
-
 }
-
-
-/* ========================================
-   ZAPIS DANYCH
-======================================== */
 
 function saveStorage(data) {
-
     try {
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(data)
-        );
-
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-
-        console.error(
-            "Nie udało się zapisać danych:",
-            error
-        );
-
+        console.error("Nie udało się zapisać danych dashboardu:", error);
     }
-
 }
-
-
-/* ========================================
-   NOWY DZIEŃ
-======================================== */
-
-/*
- * Ta funkcja uruchamia się automatycznie,
- * kiedy użytkownik odwiedzi stronę
- * w nowym dniu.
- *
- * Zachowujemy:
- *
- * - zdobyte nagrody
- * - historię myśli
- *
- * Resetujemy:
- *
- * - posiłki
- * - timery
- * - myśl dnia
- */
-
-function createNewDay(previousData) {
-
-    /*
-     * Jeżeli poprzedni dzień miał zapisaną
-     * myśl, dodajemy ją do historii.
-     */
-
-    if (
-        previousData.currentDay.thought &&
-        previousData.currentDay.thought.trim()
-    ) {
-
-        const previousThought = {
-
-            date: previousData.currentDay.date,
-
-            text:
-                previousData.currentDay.thought.trim()
-
-        };
-
-
-        /*
-         * Unikamy dodania tego samego wpisu
-         * więcej niż raz.
-         */
-
-        const alreadyExists =
-            previousData.thoughtHistory.some(
-                item =>
-                    item.date === previousThought.date
-            );
-
-
-        if (!alreadyExists) {
-
-            previousData.thoughtHistory.unshift(
-                previousThought
-            );
-
-        }
-
-    }
-
-
-    /*
-     * Tworzymy czysty dzień.
-     */
-
-    const newData = {
-
-        currentDay: createEmptyDay(),
-
-        rewards: {
-
-            /*
-             * Liczba zdobytych nagród
-             * zostaje zachowana.
-             */
-
-            count:
-                previousData.rewards.count,
-
-            /*
-             * Zgromadzone godziny pracy
-             * również zostają zachowane.
-             *
-             * Ten licznik jest później obsługiwany
-             * przez rewards.js.
-             */
-
-            workSeconds:
-                previousData.rewards.workSeconds
-
-        },
-
-        /*
-         * Historia myśli również zostaje.
-         */
-
-        thoughtHistory:
-            previousData.thoughtHistory
-
-    };
-
-
-    saveStorage(newData);
-
-    return newData;
-
-}
-
-
-/* ========================================
-   POBIERANIE AKTUALNYCH DANYCH
-======================================== */
 
 let appData = loadStorage();
 
-
-/*
- * Ta funkcja pozwala pozostałym modułom
- * pobierać aktualny stan aplikacji.
- */
-
 function getAppData() {
-
     return appData;
-
 }
-
-
-/* ========================================
-   AKTUALIZACJA DANYCH
-======================================== */
-
-/*
- * Przyjmuje funkcję, która może zmodyfikować
- * dane, a następnie zapisuje nowy stan.
- *
- * Przykład:
- *
- * updateAppData(data => {
- *     data.currentDay.thought = "Dobry dzień.";
- * });
- */
-
-function updateAppData(updateFunction) {
-
-    updateFunction(appData);
-
-    saveStorage(appData);
-
-}
-
-
-/* ========================================
-   AKTUALIZACJA POSIŁKU
-======================================== */
-
-function setMealStatus(mealName, completed) {
-
-    if (
-        !appData.currentDay.meals.hasOwnProperty(
-            mealName
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    appData.currentDay.meals[mealName] =
-        Boolean(completed);
-
-
-    saveStorage(appData);
-
-}
-
-
-/* ========================================
-   MYŚL DNIA
-======================================== */
-
-function saveTodayThought(text) {
-
-    appData.currentDay.thought =
-        String(text).trim();
-
-
-    saveStorage(appData);
-
-}
-
-
-/* ========================================
-   HISTORIA MYŚLI
-======================================== */
-
-function getThoughtHistory() {
-
-    return appData.thoughtHistory;
-
-}
-
-
-/* ========================================
-   DANE NAGRÓD
-======================================== */
-
-function getRewardsData() {
-
-    return appData.rewards;
-
-}
-
-
-/* ========================================
-   AKTUALIZACJA NAGRÓD
-======================================== */
-
-function updateRewards(updateFunction) {
-
-    updateFunction(appData.rewards);
-
-    saveStorage(appData);
-
-}
-
-
-/* ========================================
-   DANE TIMERA
-======================================== */
-
-function getTimerData(timerName) {
-
-    if (
-        !appData.currentDay.timers[timerName]
-    ) {
-
-        return null;
-
-    }
-
-
-    return appData.currentDay.timers[timerName];
-
-}
-
-
-/* ========================================
-   AKTUALIZACJA TIMERA
-======================================== */
-
-function updateTimerData(
-    timerName,
-    updateFunction
-) {
-
-    const timer =
-        appData.currentDay.timers[timerName];
-
-
-    if (!timer) {
-
-        return;
-
-    }
-
-
-    updateFunction(timer);
-
-    saveStorage(appData);
-
-}
-
-
-/* ========================================
-   ZAPIS CAŁEGO STANU
-======================================== */
 
 function persistAppData() {
-
     saveStorage(appData);
-
 }
 
+function updateAppData(callback) {
+    callback(appData);
+    saveStorage(appData);
+}
 
-/* ========================================
-   EKSPORT DANYCH
-======================================== */
+function setMealStatus(mealName, completed) {
+    if (!Object.prototype.hasOwnProperty.call(appData.currentDay.meals, mealName)) return;
+    appData.currentDay.meals[mealName] = Boolean(completed);
+    persistAppData();
+}
 
-/*
- * Przydatne w przyszłości, gdybyśmy chciały
- * dodać przycisk:
- *
- * "Eksportuj moje dane"
- *
- * Na razie funkcja jest przygotowana,
- * ale nie jest jeszcze używana.
- */
+function getCompletedMealsCount() {
+    return Object.values(appData.currentDay.meals).filter(Boolean).length;
+}
 
-function exportAppData() {
-
-    return JSON.stringify(
-        appData,
-        null,
-        2
-    );
-
+function getActivityLabel(key) {
+    return ACTIVITY_LABELS[key] || PROJECTS[key] || key;
 }
