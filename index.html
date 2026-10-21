@@ -3,117 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Mój codzienny dashboard — posiłki, aktywności i czas poświęcony na projekty.">
+    <meta name="description" content="Codzienny dziennik aktywności i czasu.">
     <title>Mój dzień</title>
     <link rel="icon" type="image/png" href="assets/icons/icon_1.png">
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <main class="dashboard">
-        <header class="dashboard-header">
-            <p class="dashboard-header__date" id="current-date"></p>
-            <p class="dashboard-header__time" id="current-time"></p>
-        </header>
+<main class="dashboard">
+    <header class="dashboard-header">
+        <p class="dashboard-header__date" id="current-date"></p>
+        <p class="dashboard-header__time" id="current-time"></p>
+        <p class="header-note">Zapisuj małe kroki. Każda sesja zostaje w Twoim kalendarzu.</p>
+    </header>
 
-        <section class="section meals" id="meals">
-            <div class="section-header">
-                <div>
-                    <p class="section-label">DZISIAJ</p>
-                    <h1 class="section-title">Moje posiłki</h1>
-                </div>
-                <div class="mood" id="meal-mood" aria-live="polite" aria-label="Nastrój zależny od liczby zjedzonych posiłków">😭</div>
-            </div>
-            <div class="meals-list">
-                <label class="meal"><input type="checkbox" data-meal="breakfast"><span class="meal__checkbox"></span><span class="meal__name">Śniadanie</span></label>
-                <label class="meal"><input type="checkbox" data-meal="second-breakfast"><span class="meal__checkbox"></span><span class="meal__name">II śniadanie</span></label>
-                <label class="meal"><input type="checkbox" data-meal="lunch"><span class="meal__checkbox"></span><span class="meal__name">Obiad</span></label>
-                <label class="meal"><input type="checkbox" data-meal="snack"><span class="meal__checkbox"></span><span class="meal__name">Przekąska</span></label>
-                <label class="meal"><input type="checkbox" data-meal="dinner"><span class="meal__checkbox"></span><span class="meal__name">Kolacja</span></label>
-            </div>
-            <p class="meals-progress" id="meals-progress">0 / 5 posiłków</p>
-        </section>
+    <div id="activity-sections"></div>
 
-        <section class="section" id="activities">
-            <div class="section-header">
-                <div>
-                    <p class="section-label">CZAS DLA MNIE</p>
-                    <h2 class="section-title">Moje aktywności</h2>
-                </div>
-                <p class="section-intro">Nie musisz wykorzystać całego czasu. Zapisujemy tyle, ile faktycznie trwała sesja.</p>
-            </div>
-            <div class="timers-grid">
-                <article class="timer-card" data-timer-card="self-care">
-                    <div class="timer-card__header"><div><p class="timer-card__label">DBANIE O SIEBIE</p><h3 class="timer-card__title">Czas dla mnie</h3></div><span class="timer-card__status" data-status="self-care">Gotowy</span></div>
-                    <div class="timer-card__display" id="self-care-display">01:00:00</div>
-                    <p class="timer-card__description">Mam dziś godzinę tylko dla siebie.</p>
-                    <div class="timer-card__actions"><button class="button button--primary" data-action="start" data-timer="self-care">Start</button><button class="button button--secondary" data-action="stop" data-timer="self-care" disabled>Stop</button></div>
-                </article>
-                <article class="timer-card" data-timer-card="cleaning">
-                    <div class="timer-card__header"><div><p class="timer-card__label">DOM</p><h3 class="timer-card__title">Sprzątanie</h3></div><span class="timer-card__status" data-status="cleaning">Gotowy</span></div>
-                    <div class="timer-card__display" id="cleaning-display">01:00:00</div>
-                    <p class="timer-card__description">Mały krok do przyjemniejszej przestrzeni.</p>
-                    <div class="timer-card__actions"><button class="button button--primary" data-action="start" data-timer="cleaning">Start</button><button class="button button--secondary" data-action="stop" data-timer="cleaning" disabled>Stop</button></div>
-                </article>
-                <article class="timer-card" data-timer-card="prayer">
-                    <div class="timer-card__header"><div><p class="timer-card__label">CHWILA CISZY</p><h3 class="timer-card__title">Modlitwa</h3></div><span class="timer-card__status" data-status="prayer">Gotowy</span></div>
-                    <div class="timer-card__display" id="prayer-display">00:30:00</div>
-                    <p class="timer-card__description">Pół godziny na modlitwę i wyciszenie.</p>
-                    <div class="timer-card__actions"><button class="button button--primary" data-action="start" data-timer="prayer">Start</button><button class="button button--secondary" data-action="stop" data-timer="prayer" disabled>Stop</button></div>
-                </article>
-            </div>
-        </section>
-
-        <section class="section projects-section" id="projects">
-            <div class="section-header">
-                <div><p class="section-label">MAŁE KROKI, DŁUGI PROCES</p><h2 class="section-title">Moje projekty</h2></div>
-                <p class="section-intro">Czas sumuje się między dniami. Zatrzymanie licznika nie usuwa postępu.</p>
-            </div>
-            <div class="projects-grid" id="projects-grid">
-                <article class="project-card" data-project-card="programming"><div class="project-card__top"><span class="project-card__icon" aria-hidden="true">💻</span><span class="timer-card__status" data-project-status="programming">Gotowy</span></div><h3>Programowanie</h3><label class="project-task-label" for="project-programming-task">Dzisiejsze zadanie</label><input class="project-task-input" id="project-programming-task" data-project-task="programming" type="text" maxlength="120" placeholder="np. Nauka GROUP BY" autocomplete="off"><p class="project-card__time" id="project-programming-time">00:00:00</p><p class="project-card__meta" id="project-programming-meta">Łączny czas projektu</p><div class="timer-card__actions"><button class="button button--primary" data-project-start="programming">Start</button><button class="button button--secondary" data-project-stop="programming" disabled>Stop</button></div></article>
-                <article class="project-card" data-project-card="business"><div class="project-card__top"><span class="project-card__icon" aria-hidden="true">📈</span><span class="timer-card__status" data-project-status="business">Gotowy</span></div><h3>Biznes</h3><label class="project-task-label" for="project-business-task">Dzisiejsze zadanie</label><input class="project-task-input" id="project-business-task" data-project-task="business" type="text" maxlength="120" placeholder="np. Plan oferty" autocomplete="off"><p class="project-card__time" id="project-business-time">00:00:00</p><p class="project-card__meta" id="project-business-meta">Łączny czas projektu</p><div class="timer-card__actions"><button class="button button--primary" data-project-start="business">Start</button><button class="button button--secondary" data-project-stop="business" disabled>Stop</button></div></article>
-                <article class="project-card" data-project-card="studies"><div class="project-card__top"><span class="project-card__icon" aria-hidden="true">📚</span><span class="timer-card__status" data-project-status="studies">Gotowy</span></div><h3>Studia / praca</h3><label class="project-task-label" for="project-studies-task">Dzisiejsze zadanie</label><input class="project-task-input" id="project-studies-task" data-project-task="studies" type="text" maxlength="120" placeholder="np. Przygotowanie do egzaminu" autocomplete="off"><p class="project-card__time" id="project-studies-time">00:00:00</p><p class="project-card__meta" id="project-studies-meta">Łączny czas projektu</p><div class="timer-card__actions"><button class="button button--primary" data-project-start="studies">Start</button><button class="button button--secondary" data-project-stop="studies" disabled>Stop</button></div></article>
-                <article class="project-card" data-project-card="writing"><div class="project-card__top"><span class="project-card__icon" aria-hidden="true">✍️</span><span class="timer-card__status" data-project-status="writing">Gotowy</span></div><h3>Pisanie</h3><label class="project-task-label" for="project-writing-task">Dzisiejsze zadanie</label><input class="project-task-input" id="project-writing-task" data-project-task="writing" type="text" maxlength="120" placeholder="np. Szkic nowego tekstu" autocomplete="off"><p class="project-card__time" id="project-writing-time">00:00:00</p><p class="project-card__meta" id="project-writing-meta">Łączny czas projektu</p><div class="timer-card__actions"><button class="button button--primary" data-project-start="writing">Start</button><button class="button button--secondary" data-project-stop="writing" disabled>Stop</button></div></article>
-                <article class="project-card" data-project-card="technology"><div class="project-card__top"><span class="project-card__icon" aria-hidden="true">💡</span><span class="timer-card__status" data-project-status="technology">Gotowy</span></div><h3>Technologiczne</h3><label class="project-task-label" for="project-technology-task">Dzisiejsze zadanie</label><input class="project-task-input" id="project-technology-task" data-project-task="technology" type="text" maxlength="120" placeholder="np. Testowanie nowego narzędzia" autocomplete="off"><p class="project-card__time" id="project-technology-time">00:00:00</p><p class="project-card__meta" id="project-technology-meta">Łączny czas projektu</p><div class="timer-card__actions"><button class="button button--primary" data-project-start="technology">Start</button><button class="button button--secondary" data-project-stop="technology" disabled>Stop</button></div></article>
-                <article class="timer-card pomodoro-card" data-timer-card="break">
-                    <div class="timer-card__header"><div><p class="timer-card__label">POMODORO</p><h3 class="timer-card__title">Przerwa</h3></div><span class="timer-card__status" data-status="break">Gotowy</span></div>
-                    <div class="timer-card__display" id="break-display">00:05:00</div>
-                    <p class="timer-card__description">Pięć minut odpoczynku. Po minucie do końca usłyszysz delikatną melodię.</p>
-                    <p class="pomodoro-count">Dzisiejsze przerwy: <strong id="pomodoro-count">0</strong></p>
-                    <div class="timer-card__actions"><button class="button button--primary" data-action="start" data-timer="break">Start</button><button class="button button--secondary" data-action="stop" data-timer="break" disabled>Stop</button></div>
-                </article>
-            </div>
-        </section>
-        <section class="section calendar-section" id="calendar">
-            <div class="section-header">
-                <div><p class="section-label">PODSUMOWANIE</p><h2 class="section-title">Mój kalendarz</h2></div>
-            </div>
-            <div class="calendar-card">
-                <div class="calendar-toolbar">
-                    <button class="calendar-nav" id="calendar-prev" type="button" aria-label="Poprzedni miesiąc">‹</button>
-                    <h3 id="calendar-month-label">Miesiąc</h3>
-                    <button class="calendar-nav" id="calendar-next" type="button" aria-label="Następny miesiąc">›</button>
-                </div>
-                <div class="calendar-weekdays" aria-hidden="true">
-                    <span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>So</span><span>Nd</span>
-                </div>
-                <div class="calendar-grid" id="calendar-grid" aria-label="Kalendarz miesięczny"></div>
-                <div class="calendar-legend"><span><i class="legend-dot legend-dot--self"></i>Czas dla mnie</span><span><i class="legend-dot legend-dot--cleaning"></i>Sprzątanie</span><span><i class="legend-dot legend-dot--prayer"></i>Modlitwa</span><span><i class="legend-dot legend-dot--project"></i>Projekt</span></div>
-            </div>
-            <div class="day-summary">
-                <div class="day-summary__header"><div><p class="section-label">WYBRANY DZIEŃ</p><h3 id="selected-day-label">Dzisiaj</h3></div><p class="day-summary__total" id="selected-day-total">0 min aktywności</p></div>
-                <div id="selected-day-sessions" class="session-list"><p class="empty-state">Nie zapisano jeszcze aktywności w tym dniu.</p></div>
-            </div>
-        </section>
-
-        <footer class="dashboard-footer">Twój dzień, we własnym tempie.</footer>
-    </main>
-
-    <script src="js/storage.js"></script>
-    <script src="js/meals.js"></script>
-    <script src="js/timers.js"></script>
-    <script src="js/projects.js"></script>
-    <script src="js/calendar.js"></script>
-    <script src="js/app.js"></script>
+    <section class="section calendar-section" id="calendar">
+        <div class="section-header"><div><p class="section-label">TWÓJ RYTM</p><h2 class="section-title">Kalendarz i podsumowania</h2></div></div>
+        <div class="calendar-card">
+            <div class="calendar-toolbar"><button class="calendar-nav" id="calendar-prev" type="button" aria-label="Poprzedni miesiąc">‹</button><h3 id="calendar-month-label">Miesiąc</h3><button class="calendar-nav" id="calendar-next" type="button" aria-label="Następny miesiąc">›</button></div>
+            <div class="calendar-weekdays" aria-hidden="true"><span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>So</span><span>Nd</span></div>
+            <div class="calendar-grid" id="calendar-grid" aria-label="Kalendarz miesięczny"></div>
+            <div class="calendar-legend" id="calendar-legend"></div>
+        </div>
+        <div class="day-summary">
+            <div class="day-summary__header"><div><p class="section-label">WYBRANY DZIEŃ</p><h3 id="selected-day-label">Dzisiaj</h3></div><p class="day-summary__total" id="selected-day-total">0 min aktywności</p></div>
+            <div id="selected-day-sessions" class="session-list"><p class="empty-state">Nie zapisano jeszcze aktywności w tym dniu.</p></div>
+        </div>
+        <div class="insights-grid">
+            <article class="insight-card"><div class="insight-heading"><div><p class="section-label">MIESIĘCZNY RYTM</p><h3>Zjedzone posiłki</h3></div><p id="meal-month-total" class="insight-total"></p></div><div id="meal-chart" class="meal-chart" aria-label="Liczba i rodzaje zjedzonych posiłków w każdym dniu miesiąca"></div><p class="chart-caption">Śniadanie, drugie śniadanie, przekąska, kolacja i obiad. Przygaszone ikony oznaczają brak zaznaczenia.</p></article>
+            <article class="insight-card"><div class="insight-heading"><div><p class="section-label">MIESIĘCZNY RYTM</p><h3>Praca w ciągu miesiąca</h3></div><p id="work-month-total" class="insight-total"></p></div><div id="work-chart" class="chart" role="img" aria-label="Czas pracy w kolejnych dniach miesiąca"></div><p class="chart-caption">Godziny pracy każdego dnia</p></article>
+        </div>
+    </section>
+    <footer class="dashboard-footer">Twój dzień, we własnym tempie.</footer>
+</main>
+<script src="js/storage.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

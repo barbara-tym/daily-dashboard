@@ -148,3 +148,54 @@ button:focus-visible { outline: 3px solid #a7b29c; outline-offset: 3px; }
 .pomodoro-count { margin: 0 0 18px; color: var(--color-text-muted); font-size: 13px; }
 .pomodoro-count strong { color: var(--color-text); font-weight: 600; }
 .project-card__icon { font-size: 21px; }
+
+/* New activity journal */
+.dashboard-header { margin-bottom: 42px; }
+.header-note { margin-top: 16px; color: var(--color-text-muted); font-size: 14px; }
+.activities-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.activity-card, .insight-card { min-width: 0; padding: 21px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-large); box-shadow: var(--shadow-soft); }
+.activity-card { transition: border-color 150ms ease, transform 150ms ease; }
+.activity-card.is-running { border-color: #9da892; box-shadow: 0 8px 30px rgba(111,117,104,.12); }
+.activity-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+.activity-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 13px; background: var(--color-accent-light); font-size: 21px; }
+.activity-card h3 { min-height: 27px; font-size: 17px; font-weight: 450; }
+.activity-total-label { margin-top: 9px; color: var(--color-text-muted); font-size: 11px; }
+.activity-time { margin: 2px 0 17px; font-size: clamp(25px, 2.5vw, 33px); font-weight: 300; letter-spacing: -.04em; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.comment-label { display: block; margin-bottom: 5px; color: var(--color-text-muted); font-size: 11px; }
+.activity-comment { width: 100%; min-width: 0; min-height: 40px; margin-bottom: 13px; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: #fbfaf7; color: var(--color-text); font: inherit; font-size: 12px; }
+.activity-comment:focus { outline: 2px solid #a7b29c; outline-offset: 1px; }
+.activity-comment:disabled { opacity: .72; }
+.activity-card .button { flex: 1; min-height: 39px; padding: 0 10px; }
+.calendar-dot { width: 7px; height: 7px; }
+.calendar-day__dots { max-width: 50px; flex-wrap: wrap; }
+.insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; margin-top: 15px; }
+.insight-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.insight-heading h3 { font-size: 18px; font-weight: 400; }
+.insight-total { color: var(--color-accent-dark); font-size: 14px; white-space: nowrap; }
+.chart { display: grid; grid-auto-columns: minmax(7px, 1fr); grid-auto-flow: column; align-items: end; gap: 3px; height: 130px; margin-top: 19px; padding-bottom: 2px; border-bottom: 1px solid var(--color-border); overflow-x: auto; }
+.chart-column { display: flex; min-width: 7px; height: 100%; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px; }
+.chart-bar { display: block; width: min(100%, 14px); min-height: 0; border-radius: 5px 5px 2px 2px; background: #7e8e73; transition: height 200ms ease; }
+#work-chart .chart-bar { background: #648c91; }
+.chart-column small { color: var(--color-text-muted); font-size: 9px; }
+.chart-caption { margin-top: 8px; color: var(--color-text-muted); font-size: 11px; }
+.calendar-day__icons { display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; gap: 0 2px; width: 44px; min-height: 20px; }
+.calendar-day__icon { font-size: 11px; font-style: normal; line-height: 1; }
+.legend-icon { display: inline-grid; width: 17px; height: 17px; place-items: center; font-size: 14px; font-style: normal; }
+.meal-eaten-toggle { display: block; width: 100%; min-height: 34px; margin: 2px 0 12px; padding: 5px 8px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-surface-soft); color: var(--color-text-muted); font-size: 11px; }
+.meal-eaten-toggle:hover { border-color: var(--color-accent); }
+.meal-eaten-toggle.is-eaten { border-color: #9da892; background: var(--color-accent-light); color: var(--color-accent-dark); }
+.meal-chart { display: grid; grid-template-columns: repeat(31, minmax(27px, 1fr)); align-items: stretch; gap: 3px; min-height: 138px; margin-top: 19px; padding-bottom: 3px; border-bottom: 1px solid var(--color-border); overflow-x: auto; }
+.meal-chart-day { display: flex; min-width: 27px; height: 100%; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px; }
+.meal-chart-count { color: var(--color-accent-dark); font-size: 9px; font-weight: 600; }
+.meal-chart-icons { display: grid; grid-template-columns: repeat(2, 12px); gap: 3px; }
+.meal-chart-icon { display: grid; width: 12px; height: 12px; place-items: center; border-radius: 4px; background: #efeee9; font-size: 9px; filter: grayscale(1); opacity: .38; }
+.meal-chart-icon.is-eaten { background: var(--color-accent-light); filter: none; opacity: 1; }
+.meal-chart-day small { color: var(--color-text-muted); font-size: 9px; }
+@media (max-width: 900px) { .activities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 580px) {
+    .activities-grid, .insights-grid { grid-template-columns: 1fr; }
+    .activity-card { padding: 18px; }
+    .activity-time { font-size: 32px; }
+    .chart { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }
+    .chart-column small { font-size: 8px; }
+}
