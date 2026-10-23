@@ -17,7 +17,6 @@ function playMilestoneSound() {
 }
 function renderActivitySections() {
     const root = document.getElementById("activity-sections");
-    renderSleepSection(root);
     ACTIVITY_GROUPS.forEach(group => {
         const section = document.createElement("details"); section.open = true; section.className = "section activity-section disclosure-section"; section.id = `section-${group.id}`;
         const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = `<div><p class="section-label">${group.label}</p><h2 class="section-title">${group.title}</h2></div><p class="section-intro">Komentarz opisze tę konkretną sesję. Możesz zatrzymywać i uruchamiać licznik wiele razy.</p>`; section.append(header);
@@ -39,12 +38,12 @@ function renderActivitySections() {
             actions.append(start, stop); if (MEAL_IDS.includes(id)) card.append(inputLabel, input, actions); else card.append(top, title, totalLabel, display, inputLabel, input, actions); grid.append(card);
         });
         section.append(grid); root.append(section);
-        if (group.id === "meals") renderSupplementsSection(root);
+        if (group.id === "meals") renderSleepSection(root);
     });
 }
-function renderSupplementsSection(root) {
-    const section = document.createElement("details"); section.open = true; section.className = "section supplements-section disclosure-section"; section.id = "supplements";
-    const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = '<div><p class="section-label">CODZIENNA RUTYNA</p><h2 class="section-title">Suplementy</h2></div>';
+function renderSupplementsSection(parent) {
+    const section = document.createElement("section"); section.className = "wellbeing-subsection supplements-section"; section.id = "supplements";
+    const heading = document.createElement("h3"); heading.className = "wellbeing-subsection__title"; heading.textContent = "Suplementy";
     const list = document.createElement("div"); list.className = "supplements-grid";
     SUPPLEMENTS.forEach(([id, name, emoji]) => {
         const label = document.createElement("label"); label.className = "supplement-item";
@@ -53,11 +52,15 @@ function renderSupplementsSection(root) {
         const text = document.createElement("span"); text.className = "supplement-item__name"; text.textContent = name;
         label.append(checkbox, icon, text); list.append(label);
     });
-    section.append(header, list); root.append(section);
+    section.append(heading, list); parent.append(section);
 }
 function renderSleepSection(root) {
     const section = document.createElement("details"); section.open = true; section.className = "section sleep-section disclosure-section"; section.id = "sleep";
-    const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = '<div><p class="section-label">ODPOCZYNEK</p><h2 class="section-title">Sen</h2></div>';
+    const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = '<div><p class="section-label">ODPOCZYNEK I CODZIENNA RUTYNA</p><h2 class="section-title">Sen i suplementy</h2></div>';
+    const content = document.createElement("div"); content.className = "wellbeing-content";
+    renderSupplementsSection(content);
+    const sleepBlock = document.createElement("section"); sleepBlock.className = "wellbeing-subsection";
+    const sleepHeading = document.createElement("h3"); sleepHeading.className = "wellbeing-subsection__title"; sleepHeading.textContent = "Sen";
     const card = document.createElement("div"); card.className = "sleep-card";
     [["wakeTime", "O której wstałaś z łóżka?"], ["bedTime", "O której położyłaś się spać?"]].forEach(([id, labelText]) => {
         const field = document.createElement("div"), label = document.createElement("label"), input = document.createElement("input");
@@ -65,7 +68,7 @@ function renderSleepSection(root) {
         input.id = `sleep-${id}`; input.type = "time"; input.dataset.sleepTime = id;
         field.append(label, input); card.append(field);
     });
-    section.append(header, card); root.append(section); renderSleepFields();
+    sleepBlock.append(sleepHeading, card); content.append(sleepBlock); section.append(header, content); root.append(section); renderSleepFields();
 }
 function renderSleepFields() {
     const today = appData.sleepLog[getTodayKey()] || {};

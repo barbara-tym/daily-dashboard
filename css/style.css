@@ -191,7 +191,9 @@ button:focus-visible { outline: 3px solid #a7b29c; outline-offset: 3px; }
 .meal-chart-icon { display: grid; width: 12px; height: 12px; place-items: center; border-radius: 4px; background: #efeee9; font-size: 9px; filter: grayscale(1); opacity: .38; }
 .meal-chart-icon.is-eaten { background: var(--color-accent-light); filter: none; opacity: 1; }
 .meal-chart-day small { color: var(--color-text-muted); font-size: 9px; }
-.supplements-section { margin-top: -12px; }
+.wellbeing-content { display: grid; gap: 24px; }
+.wellbeing-subsection__title { margin-bottom: 12px; font-size: 18px; font-weight: 400; }
+.supplements-section { margin: 0; }
 .supplements-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .supplement-item { display: flex; min-height: 58px; align-items: center; gap: 11px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-soft); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
 .supplement-item:has(input:checked) { border-color: #9da892; background: var(--color-accent-light); }
