@@ -191,9 +191,22 @@ button:focus-visible { outline: 3px solid #a7b29c; outline-offset: 3px; }
 .meal-chart-icon { display: grid; width: 12px; height: 12px; place-items: center; border-radius: 4px; background: #efeee9; font-size: 9px; filter: grayscale(1); opacity: .38; }
 .meal-chart-icon.is-eaten { background: var(--color-accent-light); filter: none; opacity: 1; }
 .meal-chart-day small { color: var(--color-text-muted); font-size: 9px; }
+.supplements-section { margin-top: -12px; }
+.supplements-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.supplement-item { display: flex; min-height: 58px; align-items: center; gap: 11px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-soft); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
+.supplement-item:has(input:checked) { border-color: #9da892; background: var(--color-accent-light); }
+.supplement-item input { width: 17px; height: 17px; accent-color: var(--color-accent); }
+.supplement-item__icon { font-size: 19px; }
+.supplement-item__name { font-size: 14px; }
+.sleep-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 22px; border: 1px solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface); box-shadow: var(--shadow-soft); }
+.sleep-field label { display: block; margin-bottom: 7px; color: var(--color-text-muted); font-size: 13px; }
+.sleep-field input { width: 100%; min-height: 44px; padding: 8px 11px; border: 1px solid var(--color-border); border-radius: 10px; background: #fbfaf7; color: var(--color-text); font: inherit; }
+.sleep-field input:focus { outline: 2px solid #a7b29c; outline-offset: 1px; }
+.sleep-summary .session-item__marker { flex-basis: 24px; width: 24px; height: auto; border-radius: 0; }
+@media (max-width: 850px) { .supplements-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .activities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 580px) {
-    .activities-grid, .insights-grid { grid-template-columns: 1fr; }
+    .activities-grid, .insights-grid, .supplements-grid, .sleep-card { grid-template-columns: 1fr; }
     .activity-card { padding: 18px; }
     .activity-time { font-size: 32px; }
     .chart { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }

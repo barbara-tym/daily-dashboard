@@ -38,7 +38,41 @@ function renderActivitySections() {
             actions.append(start, stop); if (MEAL_IDS.includes(id)) card.append(inputLabel, input, actions); else card.append(top, title, totalLabel, display, inputLabel, input, actions); grid.append(card);
         });
         section.append(grid); root.append(section);
+        if (group.id === "meals") { renderSupplementsSection(root); renderSleepSection(root); }
     });
+}
+function renderSupplementsSection(root) {
+    const section = document.createElement("section"); section.className = "section supplements-section"; section.id = "supplements";
+    const header = document.createElement("div"); header.className = "section-header"; header.innerHTML = '<div><p class="section-label">CODZIENNA RUTYNA</p><h2 class="section-title">Suplementy</h2></div>';
+    const list = document.createElement("div"); list.className = "supplements-grid";
+    SUPPLEMENTS.forEach(([id, name, emoji]) => {
+        const label = document.createElement("label"); label.className = "supplement-item";
+        const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.dataset.supplement = id; checkbox.setAttribute("aria-label", name);
+        const icon = document.createElement("span"); icon.className = "supplement-item__icon"; icon.setAttribute("aria-hidden", "true"); icon.textContent = emoji;
+        const text = document.createElement("span"); text.className = "supplement-item__name"; text.textContent = name;
+        label.append(checkbox, icon, text); list.append(label);
+    });
+    section.append(header, list); root.append(section);
+}
+function renderSleepSection(root) {
+    const section = document.createElement("section"); section.className = "section sleep-section"; section.id = "sleep";
+    const header = document.createElement("div"); header.className = "section-header"; header.innerHTML = '<div><p class="section-label">ODPOCZYNEK</p><h2 class="section-title">Sen</h2></div>';
+    const card = document.createElement("div"); card.className = "sleep-card";
+    [["wakeTime", "O której wstałaś z łóżka?"], ["bedTime", "O której położyłaś się spać?"]].forEach(([id, labelText]) => {
+        const field = document.createElement("div"), label = document.createElement("label"), input = document.createElement("input");
+        field.className = "sleep-field"; label.htmlFor = `sleep-${id}`; label.textContent = labelText;
+        input.id = `sleep-${id}`; input.type = "time"; input.dataset.sleepTime = id;
+        field.append(label, input); card.append(field);
+    });
+    section.append(header, card); root.append(section); renderSleepFields();
+}
+function renderSleepFields() {
+    const today = appData.sleepLog[getTodayKey()] || {};
+    document.querySelectorAll("[data-sleep-time]").forEach(input => { input.value = today[input.dataset.sleepTime] || ""; });
+}
+function renderSupplements() {
+    const today = appData.supplementLog[getTodayKey()] || {};
+    document.querySelectorAll("[data-supplement]").forEach(input => { input.checked = today[input.dataset.supplement] === true; });
 }
 function startActivity(id) {
     if (appData.activeSession || !ACTIVITY_BY_ID[id]) return;
@@ -89,9 +123,22 @@ function initializeApp() {
         }
         if (start) startActivity(start.dataset.start); if (stop) stopActivity();
     });
+    document.getElementById("activity-sections").addEventListener("change", event => {
+        const input = event.target.closest("[data-supplement]"); if (!input) return;
+        const date = getTodayKey(); appData.supplementLog[date] ||= {};
+        appData.supplementLog[date][input.dataset.supplement] = input.checked;
+        persistAppData(); renderCalendar();
+    });
+    document.getElementById("activity-sections").addEventListener("change", event => {
+        const input = event.target.closest("[data-sleep-time]"); if (!input) return;
+        const date = getTodayKey(); appData.sleepLog[date] ||= {};
+        appData.sleepLog[date][input.dataset.sleepTime] = input.value;
+        if (!appData.sleepLog[date].wakeTime && !appData.sleepLog[date].bedTime) delete appData.sleepLog[date];
+        persistAppData(); renderCalendar();
+    });
     // A running session survives a refresh and is finalized when the user stops it.
     if (appData.activeSession && !ACTIVITY_BY_ID[appData.activeSession.category]) appData.activeSession = null;
     document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
-    renderClock(); window.setInterval(renderClock, 1000); initializeCalendar(); renderActivities(); timerTick = window.setInterval(tick, 1000);
+    renderClock(); window.setInterval(renderClock, 1000); initializeCalendar(); renderActivities(); renderSupplements(); timerTick = window.setInterval(tick, 1000);
 }
 document.addEventListener("DOMContentLoaded", initializeApp);
