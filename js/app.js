@@ -17,9 +17,10 @@ function playMilestoneSound() {
 }
 function renderActivitySections() {
     const root = document.getElementById("activity-sections");
+    renderSleepSection(root);
     ACTIVITY_GROUPS.forEach(group => {
-        const section = document.createElement("section"); section.className = "section activity-section"; section.id = `section-${group.id}`;
-        const header = document.createElement("div"); header.className = "section-header"; header.innerHTML = `<div><p class="section-label">${group.label}</p><h2 class="section-title">${group.title}</h2></div><p class="section-intro">Komentarz opisze tę konkretną sesję. Możesz zatrzymywać i uruchamiać licznik wiele razy.</p>`; section.append(header);
+        const section = document.createElement("details"); section.open = true; section.className = "section activity-section disclosure-section"; section.id = `section-${group.id}`;
+        const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = `<div><p class="section-label">${group.label}</p><h2 class="section-title">${group.title}</h2></div><p class="section-intro">Komentarz opisze tę konkretną sesję. Możesz zatrzymywać i uruchamiać licznik wiele razy.</p>`; section.append(header);
         const grid = document.createElement("div"); grid.className = "activities-grid";
         group.activities.forEach(([id, name, icon]) => {
             const card = document.createElement("article"); card.className = "activity-card"; card.dataset.activity = id;
@@ -38,12 +39,12 @@ function renderActivitySections() {
             actions.append(start, stop); if (MEAL_IDS.includes(id)) card.append(inputLabel, input, actions); else card.append(top, title, totalLabel, display, inputLabel, input, actions); grid.append(card);
         });
         section.append(grid); root.append(section);
-        if (group.id === "meals") { renderSupplementsSection(root); renderSleepSection(root); }
+        if (group.id === "meals") renderSupplementsSection(root);
     });
 }
 function renderSupplementsSection(root) {
-    const section = document.createElement("section"); section.className = "section supplements-section"; section.id = "supplements";
-    const header = document.createElement("div"); header.className = "section-header"; header.innerHTML = '<div><p class="section-label">CODZIENNA RUTYNA</p><h2 class="section-title">Suplementy</h2></div>';
+    const section = document.createElement("details"); section.open = true; section.className = "section supplements-section disclosure-section"; section.id = "supplements";
+    const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = '<div><p class="section-label">CODZIENNA RUTYNA</p><h2 class="section-title">Suplementy</h2></div>';
     const list = document.createElement("div"); list.className = "supplements-grid";
     SUPPLEMENTS.forEach(([id, name, emoji]) => {
         const label = document.createElement("label"); label.className = "supplement-item";
@@ -55,8 +56,8 @@ function renderSupplementsSection(root) {
     section.append(header, list); root.append(section);
 }
 function renderSleepSection(root) {
-    const section = document.createElement("section"); section.className = "section sleep-section"; section.id = "sleep";
-    const header = document.createElement("div"); header.className = "section-header"; header.innerHTML = '<div><p class="section-label">ODPOCZYNEK</p><h2 class="section-title">Sen</h2></div>';
+    const section = document.createElement("details"); section.open = true; section.className = "section sleep-section disclosure-section"; section.id = "sleep";
+    const header = document.createElement("summary"); header.className = "section-header disclosure-summary"; header.innerHTML = '<div><p class="section-label">ODPOCZYNEK</p><h2 class="section-title">Sen</h2></div>';
     const card = document.createElement("div"); card.className = "sleep-card";
     [["wakeTime", "O której wstałaś z łóżka?"], ["bedTime", "O której położyłaś się spać?"]].forEach(([id, labelText]) => {
         const field = document.createElement("div"), label = document.createElement("label"), input = document.createElement("input");
